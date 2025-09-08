@@ -1,23 +1,23 @@
-@echo off
+@echo off & setlocal enabledelayedexpansion
 
-REM REM REM REM REM REM RE
-REM THIS IS THE FLAGS SECTION
-REM SET YOUR FLAGS HERE XXX
-REM 0 STANDS FOR FALSE
-REM 1 STANDS FOR TRUE
-REM FLAG NAMES ARE SELF EXPLANATORY
-
-set FLAG_IS_SPECIAL_CHARACTERS_IN_SSID_OR_PROFILE=0
+REM THIS IS THE FLAGS SECTION , SET YOUR FLAGS HERE, 0 STANDS FOR FALSE, 1 STANDS FOR TRUE
+REM FLAG NAMES (VARIABLES) ARE NAMED EXPLICITLY TO INDICATE THEIR PURPOSE
+REM ALL FLAGS MUST HAVE SOME DEFAULT VALUE
 Rem //flag_gateway_address_to_check can be set to a dns server or external website (like 1.1.1.1) if you wish to check for internet connection instead of router's connection 
+
+set FLAG_DEBUG_MODE=0
+set FLAG_IS_SPECIAL_CHARACTERS_IN_SSID_OR_PROFILE=0
 set FLAG_GATEWAY_ADDRESS_TO_CHECK=192.168.1.254
 set FLAG_TIMEOUT_BETWEEN_RETRIES=10
 set FLAG_TIMEOUT_TO_CHECK_FOR_DISCONNECTION=200
 
-REM END OF FLAGS SECTION
-
-setlocal enabledelayedexpansion
 :test_flags
 if %FLAG_IS_SPECIAL_CHARACTERS_IN_SSID_OR_PROFILE%==1 chcp 65001
+if %FLAG_DEBUG_MODE%==1 ( echo:Special Ssid Consideration==^(%FLAG_IS_SPECIAL_CHARACTERS_IN_SSID_OR_PROFILE%^)[0 or 1]
+echo:Gateway address to check==^(%FLAG_GATEWAY_ADDRESS_TO_CHECK%^)[ip address/domain]
+echo:Timeout between retries==^(%FLAG_TIMEOUT_BETWEEN_RETRIES%^)[seconds]
+echo:Timeout to check disconnection==^(%FLAG_TIMEOUT_TO_CHECK_FOR_DISCONNECTION%^)[seconds]
+timeout 100)
 :display_first_line
 cls
     if defined interfacename if "!interfacename!" NEQ "" echo interface ^<!interfacename!^>%tab%%tab%%tab%%tab%^( Scanning is%tab%%tab%%title_append%& echo:%tab%%tab%%tab%%tab%%tab%throttled by Windows API^)&goto picknext
@@ -46,13 +46,15 @@ echo Total profiles: %tot_profiles%
 timeout %FLAG_TIMEOUT_BETWEEN_RETRIES% >NUL
 set /a shuf_profile+=1
 if %shuf_profile% GTR %tot_profiles% set /a shuf_profile=1
-ping %FLAG_GATEWAY_ADDRESS% >NUL&&(echo:connection_test_1_pass & goto nekst)
+echo:pinging  %FLAG_GATEWAY_ADDRESS_TO_CHECK% to check...
+ping %FLAG_GATEWAY_ADDRESS_TO_CHECK% >NUL&&(echo:connection_test_1_pass & goto nekst)
 for /f "tokens=1,* delims=:" %%a in ('type Shuffle_profiles_for_reconnect.txt ^|  findstr /n ".*" ^| findstr /r "^%shuf_profile%[:]"') do (
 echo trying profile:%%b
 echo on
 netsh wlan connect name="%%b" interface="!interfacename!"
 @echo off)
-ping %FLAG_GATEWAY_ADDRESS% >NUL&&(echo:connection_test_2_pass & goto nekst)
+echo:pinging  %FLAG_GATEWAY_ADDRESS_TO_CHECK% to check...
+ping %FLAG_GATEWAY_ADDRESS_TO_CHECK% >NUL&&(echo:connection_test_2_pass & goto nekst)
 echo repeating
 goto :END
 :nekst
