@@ -8,6 +8,12 @@ REM 1 STANDS FOR TRUE
 REM FLAG NAMES ARE SELF EXPLANATORY
 
 set FLAG_IS_SPECIAL_CHARACTERS_IN_SSID_OR_PROFILE=0
+Rem //flag_gateway_address_to_check can be set to a dns server or external website (like 1.1.1.1) if you wish to check for internet connection instead of router's connection 
+set FLAG_GATEWAY_ADDRESS_TO_CHECK=192.168.1.254
+set FLAG_TIMEOUT_BETWEEN_RETRIES=10
+set FLAG_TIMEOUT_TO_CHECK_FOR_DISCONNECTION=200
+
+REM END OF FLAGS SECTION
 
 setlocal enabledelayedexpansion
 :test_flags
@@ -37,20 +43,21 @@ set tot_profiles=0
 for /f "delims=" %%i in (connect_profiles_for_disconnect.bat.txt) do set /a tot_profiles+=1
 echo Total profiles: %tot_profiles%
 :END
+timeout %FLAG_TIMEOUT_BETWEEN_RETRIES% >NUL
 set /a shuf_profile+=1
 if %shuf_profile% GTR %tot_profiles% set /a shuf_profile=1
-ping 192.168.1.254 >NUL&&(echo:connection_test_1_pass & goto nekst)
+ping %FLAG_GATEWAY_ADDRESS% >NUL&&(echo:connection_test_1_pass & goto nekst)
 for /f "tokens=1,* delims=:" %%a in ('type Shuffle_profiles_for_reconnect.txt ^|  findstr /n ".*" ^| findstr /r "^%shuf_profile%[:]"') do (
 echo trying profile:%%b
 echo on
 netsh wlan connect name="%%b" interface="!interfacename!"
 @echo off)
-ping 192.168.1.254 >NUL&&(echo:connection_test_2_pass & goto nekst)
+ping %FLAG_GATEWAY_ADDRESS% >NUL&&(echo:connection_test_2_pass & goto nekst)
 echo repeating
 goto :END
 :nekst
 echo %time% waiting for input or disconnection...
-timeout 200 >NUL
+timeout %FLAG_TIMEOUT_TO_CHECK_FOR_DISCONNECTION% >NUL
 goto picknext
 :colors
 
@@ -79,3 +86,4 @@ Set white=[37m
 for /f "delims=" %%i in (%3) do echo|set/p=!%~11!!%~2!%%~i[0m
 REM powershell -c "write-host -nonewline -backgroundcolor %first% -foregroundcolor %second% \"%~3\""
 goto :eof
+
