@@ -40,7 +40,7 @@ cls
 set shuf_profile=0
 set disconnect_times=0
 set tot_profiles=0
-for /f "delims=" %%i in (connect_profiles_for_disconnect.bat.txt) do set /a tot_profiles+=1
+for /f "delims=" %%i in (Shuffle_profiles_for_reconnect.txt) do set /a tot_profiles+=1
 echo Total profiles: %tot_profiles%
 :END
 timeout %FLAG_TIMEOUT_BETWEEN_RETRIES% >NUL
@@ -86,4 +86,5 @@ Set white=[37m
 for /f "delims=" %%i in (%3) do echo|set/p=!%~11!!%~2!%%~i[0m
 REM powershell -c "write-host -nonewline -backgroundcolor %first% -foregroundcolor %second% \"%~3\""
 goto :eof
+
 
