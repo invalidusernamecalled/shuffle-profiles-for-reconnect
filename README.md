@@ -1,4 +1,4 @@
-It retries connecting to internet/router using different Wi-Fi Profile names saved in txt file.
+It retries connection using different Wi-Fi Profile names saved in txt file.
 (Profile names can be gotten using command `netsh wlan show profiles`)
 
 Replace the information in text file with actual profile names you wish to connect to.
