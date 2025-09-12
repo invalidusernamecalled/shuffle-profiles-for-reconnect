@@ -14,7 +14,7 @@ REM See 2 examples below
 REM set "FLAG_PATH_PROFILES_TXT=C:\folder A\folder 1\profile.txt"
 REM set FLAG_PATH_PROFILES_TXT=reconnect.txt
 
-set FLAG_PATH_PROFILES_TXT=Shuffle_profiles_for_reconnect.txt
+set FLAG_PATH_PROFILES_TXT=profiles.txt
 
 REM enable basic logging when disconnected and connected 0 (false) or 1 (true)
 set FLAG_BASIC_LOGGING=0
@@ -62,7 +62,7 @@ timeout 100)
 :display_first_line
 cls
     if defined interfacename if "!interfacename!" NEQ "" echo interface ^<!interfacename!^>%tab%%tab%%tab%%tab%^( Scanning is%tab%%tab%%title_append%& echo:%tab%%tab%%tab%%tab%%tab%throttled by Windows API^)&goto picknext
-    call :colors  black yellow "scanning interfaces on this computer..."
+    echo:scanning interfaces on this computer...
     echo:
     echo:
     set counters=0
@@ -82,11 +82,12 @@ set ran_connection=0
 set success_trial=1
 set shuf_profile=0
 set tot_profiles=0
+if not exist "%FLAG_PATH_PROFILES_TXT%" echo:Path or file not found: "%FLAG_PATH_PROFILES_TXT%" & echo: make sure you `set "FLAG_PATH_PROFILES_TXT=path\ to \profiles.txt"` in the batch script. & PAUSE & goto :eof
 for /f "delims=" %%i in ('type "%FLAG_PATH_PROFILES_TXT%"') do set /a tot_profiles+=1
 echo Total profiles: %tot_profiles%
 :END
-echo|set /p=..%FLAG_TIMEOUT_BETWEEN_RETRIES% sec & timeout %FLAG_TIMEOUT_BETWEEN_RETRIES% >NUL
-ping -n 1 %FLAG_GATEWAY_ADDRESS_TO_CHECK% | find /i "ttl=" >NUL&&(echo:1:checking & set check_once=1&  goto nekst) || echo:
+echo:......... wait %FLAG_TIMEOUT_BETWEEN_RETRIES% sec & timeout %FLAG_TIMEOUT_BETWEEN_RETRIES% >NUL
+ping -n 1 %FLAG_GATEWAY_ADDRESS_TO_CHECK% | find /i "ttl=" >NUL&&(echo:?--X--[*]& set check_once=1&  goto nekst) || echo:
 set /a shuf_profile+=1
 if %shuf_profile% GTR %tot_profiles% set /a shuf_profile=1
 for /f "tokens=1,* delims=:" %%a in ('type "%FLAG_PATH_PROFILES_TXT%" ^|  findstr /n ".*" ^| findstr /r "^%shuf_profile%[:]"') do (
@@ -97,8 +98,8 @@ set ran_index=%shuf_profile%
 netsh wlan connect name="%%b" interface="!interfacename!"
 @echo off)
 
-echo|set/p=. [waiting %FLAG_TIMEOUT_BETWEEN_RETRIES% sec do not bypass]&timeout %FLAG_TIMEOUT_BETWEEN_RETRIES% >NUL
-ping -n 1 %FLAG_GATEWAY_ADDRESS_TO_CHECK% | find /i "ttl=" >NUL&&(echo:2:checking_after_connection_attempt & set check_once=1& goto nekst) || echo:
+echo:......... wait %FLAG_TIMEOUT_BETWEEN_RETRIES% sec&timeout %FLAG_TIMEOUT_BETWEEN_RETRIES% >NUL
+ping -n 1 %FLAG_GATEWAY_ADDRESS_TO_CHECK% | find /i "ttl=" >NUL&&(echo:?--X--[*] & set check_once=1& goto nekst) || echo:
 
 if %ran_connection% GEQ 1 if defined success_profile_index for /f "tokens=1,* delims=:" %%a in ('type "%FLAG_PATH_PROFILES_TXT%" ^|  findstr /n ".*" ^| findstr /r "^%success_profile_index%[:]"') do (
 echo|set/p=trying last success profile[%success_profile_index%]:    "%%b"
@@ -107,12 +108,13 @@ set ran_index=%success_profile_index%
 netsh wlan connect name="%%b" interface="!interfacename!"
 @echo off)
 
-ping -n 1 %FLAG_GATEWAY_ADDRESS_TO_CHECK% | find /i "ttl=" >NUL&&(echo:3:checking_after_connection_attempt &set check_once=1&  goto nekst) || set ran_connection=0
+ping -n 1 %FLAG_GATEWAY_ADDRESS_TO_CHECK% | find /i "ttl=" >NUL&&(echo:?--X--[*] &set check_once=1&  goto nekst) || set ran_connection=0
 
 echo:repeating
 goto :END
 :nekst
-if %check_once%==1 set check_once=0 & for /f "tokens=1,* delims=:" %%i in ('netsh wlan show interfaces ^| findstr /ir "Name.*[:] State.*[:] ssid.*[:]"') do (for /f "tokens=1 delims= " %%b in ("%%i") do if /i "%%b"=="state" for /f "tokens=* delims= " %%a in ("%%j") do if /i "%%a"=="connected" if defined ran_index ping -n 1 %FLAG_GATEWAY_ADDRESS_TO_CHECK% | find /i "ttl=" >NUL&&echo SET success_profile = %ran_index% & set success_profile_index=%ran_index%)
+echo:?--*--[*]  :^)
+if %check_once%==1 set check_once=0 & for /f "tokens=1,* delims=:" %%i in ('netsh wlan show interfaces ^| findstr /ir "Name.*[:] State.*[:] ssid.*[:]"') do (for /f "tokens=1 delims= " %%b in ("%%i") do if /i "%%b"=="state" for /f "tokens=* delims= " %%a in ("%%j") do if /i "%%a"=="connected" if defined ran_index ping -n 1 %FLAG_GATEWAY_ADDRESS_TO_CHECK% | find /i "ttl=" >NUL&&set success_profile_index=%ran_index%)
 if %FLAG_BASIC_LOGGING%==1 (call :get_ip_address)
 if %FLAG_BASIC_LOGGING%==1 for /f "tokens=1,* delims=:" %%a in ('type "%FLAG_PATH_PROFILES_TXT%" ^|  findstr /n ".*" ^| findstr /r "^%success_profile_index%[:]"') do (echo: %date% %time%:    Connected to "%%a" with ip address as %ip_address%)>>"%BASIC_LOG_FILE%"
 echo  ^(%time%^)                      waiting for input or disconnection
@@ -126,37 +128,6 @@ goto end
 set ip_address=
 for /f "tokens=1,2,3 delims=: " %%i in ('netsh interface ipv4 show config name^="!interfacename!" ^| findstr /ir "ip address[:]"') do (if /i "%%i %%j"=="ip address" set ip_address=%%k)
 if "%ip_address%"=="" set ip_address=[Error:unable_to_get_ip_address]
-
 exit /b
-
-echo GO TO HELL
-
-:colors
-
-Set Black1=[40m
-
-Set Red1=[41m
-
-Set Green1=[42m
-Set Yellow1=[43m
-
-Set Blue1=[44m
-
-Set Magenta1=[45m
-Set white1=[107m
-Set Cyan1=[46m
-
-Set Black=[30m
-Set Red=[31m
-Set Green=[32m
-Set Blue=[34m
-Set Yellow=[33m
-Set Magenta=[35m
-Set Cyan=[36m
-Set white=[37m
-
-for /f "delims=" %%i in (%3) do echo|set/p=!%~11!!%~2!%%~i[0m
-REM powershell -c "write-host -nonewline -backgroundcolor %first% -foregroundcolor %second% \"%~3\""
-goto :eof
 
 
