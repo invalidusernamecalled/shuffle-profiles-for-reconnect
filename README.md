@@ -4,7 +4,7 @@ It retries connection using different Wi-Fi Profile names saved in txt file.
 Replace the information in text file with actual profile names you wish to connect to.
 
 > [!NOTE]
-> 1. Configure txt file containing Wi-fi profile names: `set FLAG_PATH_PROFILES_TXT=Shuffle_profiles_for_reconnect.txt` 
+> 1. Configure txt file containing Wi-fi profile names: `set FLAG_PATH_PROFILES_TXT=profiles.txt` 
 > 2. Enable logging `set FLAG_BASIC_LOGGING=1`
 > 3. Supports more flags
 
