@@ -27,7 +27,7 @@ REM set BASIC_LOG_FILE=logs_try_to_reconnect_bat.txt
 set BASIC_LOG_FILE=logs_try_to_reconnect_bat.txt
 
 REM do you want it to remember last successful connection's profile name 1 (true) or 0 (false)
-set FLAG_REMEMBER_AND_TRY_SUCCESSFUL_PROFILES_FIRST=1
+set FLAG_REMEMBER_AND_TRY_SUCCESSFUL_PROFILES=1
 
 REM ::set if SSIDs have special characters (or leave as default)
 set FLAG_IS_SPECIAL_CHARACTERS_IN_SSID_OR_PROFILE=0
@@ -101,6 +101,8 @@ netsh wlan connect name="%%b" interface="!interfacename!"
 echo:......... wait %FLAG_TIMEOUT_BETWEEN_RETRIES% sec&timeout %FLAG_TIMEOUT_BETWEEN_RETRIES% >NUL
 ping -n 1 %FLAG_GATEWAY_ADDRESS_TO_CHECK% | find /i "ttl=" >NUL&&(echo:[]--?-- & set check_once=1& goto nekst) || echo:
 
+if %FLAG_REMEMBER_AND_TRY_SUCCESSFUL_PROFILES%==0 goto end
+
 if %ran_connection% GEQ 1 if defined success_profile_index for /f "tokens=1,* delims=:" %%a in ('type "%FLAG_PATH_PROFILES_TXT%" ^|  findstr /n ".*" ^| findstr /r "^%success_profile_index%[:]"') do (
 echo|set/p=trying last success profile[%success_profile_index%]:    "%%b"
 echo on
@@ -130,5 +132,6 @@ set ip_address=
 for /f "tokens=1,2,3 delims=: " %%i in ('netsh interface ipv4 show config name^="!interfacename!" ^| findstr /ir "ip address[:]"') do (if /i "%%i %%j"=="ip address" set ip_address=%%k)
 if "%ip_address%"=="" set ip_address=[Error:unable_to_get_ip_address]
 exit /b
+
 
 
