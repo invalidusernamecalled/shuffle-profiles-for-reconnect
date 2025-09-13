@@ -14,7 +14,7 @@ REM See 2 examples below
 REM set "FLAG_PATH_PROFILES_TXT=C:\folder A\folder 1\profile.txt"
 REM set FLAG_PATH_PROFILES_TXT=reconnect.txt
 
-set FLAG_PATH_PROFILES_TXT=profiles.txt
+set FLAG_PATH_PROFILES_TXT=Shuffle_profiles_for_reconnect.txt
 
 REM enable basic logging when disconnected and connected 0 (false) or 1 (true)
 set FLAG_BASIC_LOGGING=0
@@ -116,8 +116,7 @@ echo:repeating
 goto :END
 :nekst
 echo:[]--*--[]
-if %check_once%==1 set check_once=0 & for
- /f "tokens=1,* delims=:" %%i in ('netsh wlan show interfaces ^| findstr /ir "Name.*[:] State.*[:] ssid.*[:]"') do (for /f "tokens=1 delims= " %%b in ("%%i") do if /i "%%b"=="state" for /f "tokens=* delims= " %%a in ("%%j") do if /i "%%a"=="connected" if defined ran_index ping -n 1 %FLAG_GATEWAY_ADDRESS_TO_CHECK% | find /i "ttl=" >NUL&&set success_profile_index=%ran_index%)
+if %check_once%==1 set check_once=0 & for /f "tokens=1,* delims=:" %%i in ('netsh wlan show interfaces ^| findstr /ir "Name.*[:] State.*[:] ssid.*[:]"') do (for /f "tokens=1 delims= " %%b in ("%%i") do if /i "%%b"=="state" for /f "tokens=* delims= " %%a in ("%%j") do if /i "%%a"=="connected" if defined ran_index ping -n 1 %FLAG_GATEWAY_ADDRESS_TO_CHECK% | find /i "ttl=" >NUL&&set success_profile_index=%ran_index%)
 if %FLAG_BASIC_LOGGING%==1 (call :get_ip_address)
 if %FLAG_BASIC_LOGGING%==1 for /f "tokens=1,* delims=:" %%a in ('type "%FLAG_PATH_PROFILES_TXT%" ^|  findstr /n ".*" ^| findstr /r "^%success_profile_index%[:]"') do (echo: %date% %time%:    Connected to "%%a" with ip address as %ip_address%)>>"%BASIC_LOG_FILE%"
 echo  ^(%time%^)                      waiting for input or disconnection
