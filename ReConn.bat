@@ -84,10 +84,10 @@ set shuf_profile=0
 set tot_profiles=0
 if not exist "%FLAG_PATH_PROFILES_TXT%" echo:Path or file not found: "%FLAG_PATH_PROFILES_TXT%" & echo: make sure you `set "FLAG_PATH_PROFILES_TXT=path\ to \profiles.txt"` in the batch script. & PAUSE & goto :eof
 for /f "delims=" %%i in ('type "%FLAG_PATH_PROFILES_TXT%"') do set /a tot_profiles+=1
-echo Total profiles: %tot_profiles%
+echo Reading from file: "%FLAG_PATH_PROFILES_TXT%"
 :END
 echo:......... wait %FLAG_TIMEOUT_BETWEEN_RETRIES% sec & timeout %FLAG_TIMEOUT_BETWEEN_RETRIES% >NUL
-ping -n 1 %FLAG_GATEWAY_ADDRESS_TO_CHECK% | find /i "ttl=" >NUL&&(echo:?--X--[*]& set check_once=1&  goto nekst) || echo:
+ping -n 1 %FLAG_GATEWAY_ADDRESS_TO_CHECK% | find /i "ttl=" >NUL&&(echo:[]--?--& set check_once=1&  goto nekst) || echo:
 set /a shuf_profile+=1
 if %shuf_profile% GTR %tot_profiles% set /a shuf_profile=1
 for /f "tokens=1,* delims=:" %%a in ('type "%FLAG_PATH_PROFILES_TXT%" ^|  findstr /n ".*" ^| findstr /r "^%shuf_profile%[:]"') do (
@@ -99,7 +99,7 @@ netsh wlan connect name="%%b" interface="!interfacename!"
 @echo off)
 
 echo:......... wait %FLAG_TIMEOUT_BETWEEN_RETRIES% sec&timeout %FLAG_TIMEOUT_BETWEEN_RETRIES% >NUL
-ping -n 1 %FLAG_GATEWAY_ADDRESS_TO_CHECK% | find /i "ttl=" >NUL&&(echo:?--X--[*] & set check_once=1& goto nekst) || echo:
+ping -n 1 %FLAG_GATEWAY_ADDRESS_TO_CHECK% | find /i "ttl=" >NUL&&(echo:[]--?-- & set check_once=1& goto nekst) || echo:
 
 if %ran_connection% GEQ 1 if defined success_profile_index for /f "tokens=1,* delims=:" %%a in ('type "%FLAG_PATH_PROFILES_TXT%" ^|  findstr /n ".*" ^| findstr /r "^%success_profile_index%[:]"') do (
 echo|set/p=trying last success profile[%success_profile_index%]:    "%%b"
@@ -108,13 +108,14 @@ set ran_index=%success_profile_index%
 netsh wlan connect name="%%b" interface="!interfacename!"
 @echo off)
 
-ping -n 1 %FLAG_GATEWAY_ADDRESS_TO_CHECK% | find /i "ttl=" >NUL&&(echo:?--X--[*] &set check_once=1&  goto nekst) || set ran_connection=0
+ping -n 1 %FLAG_GATEWAY_ADDRESS_TO_CHECK% | find /i "ttl=" >NUL&&(echo:[]--?-- &set check_once=1&  goto nekst) || set ran_connection=0
 
 echo:repeating
 goto :END
 :nekst
-echo:?--*--[*]  :^)
-if %check_once%==1 set check_once=0 & for /f "tokens=1,* delims=:" %%i in ('netsh wlan show interfaces ^| findstr /ir "Name.*[:] State.*[:] ssid.*[:]"') do (for /f "tokens=1 delims= " %%b in ("%%i") do if /i "%%b"=="state" for /f "tokens=* delims= " %%a in ("%%j") do if /i "%%a"=="connected" if defined ran_index ping -n 1 %FLAG_GATEWAY_ADDRESS_TO_CHECK% | find /i "ttl=" >NUL&&set success_profile_index=%ran_index%)
+echo:[]--*--[]
+if %check_once%==1 set check_once=0 & for
+ /f "tokens=1,* delims=:" %%i in ('netsh wlan show interfaces ^| findstr /ir "Name.*[:] State.*[:] ssid.*[:]"') do (for /f "tokens=1 delims= " %%b in ("%%i") do if /i "%%b"=="state" for /f "tokens=* delims= " %%a in ("%%j") do if /i "%%a"=="connected" if defined ran_index ping -n 1 %FLAG_GATEWAY_ADDRESS_TO_CHECK% | find /i "ttl=" >NUL&&set success_profile_index=%ran_index%)
 if %FLAG_BASIC_LOGGING%==1 (call :get_ip_address)
 if %FLAG_BASIC_LOGGING%==1 for /f "tokens=1,* delims=:" %%a in ('type "%FLAG_PATH_PROFILES_TXT%" ^|  findstr /n ".*" ^| findstr /r "^%success_profile_index%[:]"') do (echo: %date% %time%:    Connected to "%%a" with ip address as %ip_address%)>>"%BASIC_LOG_FILE%"
 echo  ^(%time%^)                      waiting for input or disconnection
