@@ -9,7 +9,7 @@ WIFI Name 2
 
 
 > [!NOTE]
-> 1. Configure txt file name or path containing profile names: `set FLAG_PATH_PROFILES_TXT=profiles.txt` 
+> 1. Configure txt file path in the script `set FLAG_PATH_PROFILES_TXT=profiles.txt` 
 > 2. Supports more flags
 
 The script can optionally generate a log file by changing a flag `set FLAG_BASIC_LOGGING=1`:
