@@ -17,7 +17,7 @@ REM set FLAG_PATH_PROFILES_TXT=reconnect.txt
 set FLAG_PATH_PROFILES_TXT=Shuffle_profiles_for_reconnect.txt
 
 REM enable basic logging when disconnected and connected 0 (false) or 1 (true)
-set FLAG_BASIC_LOGGING=0
+set FLAG_BASIC_LOGGING=1
 
 REM log file location for saving logs
 REM See 2 examples below
@@ -79,6 +79,7 @@ cls
     if "!interfacename!" NEQ "" (for /f "delims=" %%i in ("!interfacename!") do echo Found:^<%%i^>.) else (echo: & echo:***No Wireless interface found^!*** & echo: &  PAUSE & GOTO :eof)
 set ran_connection=0
 :picknext
+if %FLAG_BASIC_LOGGING%==1 (echo: %date% %time%:     Started monitoring...)>>"%BASIC_LOG_FILE%"
 set success_trial=1
 set shuf_profile=0
 set tot_profiles=0
@@ -95,6 +96,7 @@ echo|set/p=trying profile[%shuf_profile%]:    "%%b"
 echo on
 set ran_connection=1
 set ran_index=%shuf_profile%
+if %FLAG_BASIC_LOGGING%==1 (echo: %date% %time%:     Trying to connect to "%%b")>>"%BASIC_LOG_FILE%"
 netsh wlan connect name="%%b" interface="!interfacename!"
 @echo off)
 
@@ -107,6 +109,7 @@ if %ran_connection% GEQ 1 if defined success_profile_index for /f "tokens=1,* de
 echo|set/p=trying last success profile[%success_profile_index%]:    "%%b"
 echo on
 set ran_index=%success_profile_index%
+if %FLAG_BASIC_LOGGING%==1 (echo: %date% %time%:     echo:Trying to connect to "%%b")>>"%BASIC_LOG_FILE%"
 netsh wlan connect name="%%b" interface="!interfacename!"
 @echo off)
 
@@ -118,7 +121,7 @@ goto :END
 echo:[]--*--[]
 if %check_once%==1 set check_once=0 & for /f "tokens=1,* delims=:" %%i in ('netsh wlan show interfaces ^| findstr /ir "Name.*[:] State.*[:] ssid.*[:]"') do (for /f "tokens=1 delims= " %%b in ("%%i") do if /i "%%b"=="state" for /f "tokens=* delims= " %%a in ("%%j") do if /i "%%a"=="connected" if defined ran_index ping -n 1 %FLAG_GATEWAY_ADDRESS_TO_CHECK% | find /i "ttl=" >NUL&&set success_profile_index=%ran_index%)
 if %FLAG_BASIC_LOGGING%==1 (call :get_ip_address)
-if %FLAG_BASIC_LOGGING%==1 for /f "tokens=1,* delims=:" %%a in ('type "%FLAG_PATH_PROFILES_TXT%" ^|  findstr /n ".*" ^| findstr /r "^%success_profile_index%[:]"') do (echo: %date% %time%:    Connected to "%%a" with ip address as %ip_address%)>>"%BASIC_LOG_FILE%"
+if %FLAG_BASIC_LOGGING%==1 for /f "tokens=1,* delims=:" %%a in ('type "%FLAG_PATH_PROFILES_TXT%" ^|  findstr /n ".*" ^| findstr /r "^%success_profile_index%[:]"') do (echo: %date% %time%:     Connected to "%%b" with ip address as %ip_address%)>>"%BASIC_LOG_FILE%"
 echo  ^(%time%^)                      waiting for input or disconnection
 echo|set/p=[                .
 :peet
