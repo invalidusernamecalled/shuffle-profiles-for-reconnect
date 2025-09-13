@@ -42,7 +42,7 @@ set FLAG_GATEWAY_ADDRESS_TO_CHECK=1.1.1.1
 REM ::this is the address used for disconnection if SEPARATE_ADDRESSES_FOR_CHECKING_CONNECTION_DISCONNECTION is set to 1
 set FLAG_GATEWAY_TO_CHECK_FOR_DISCONNECTION=192.168.1.254
 
-REM ::Timeout between retries during disconnection
+REM ::Timeout between retries to connect
 set FLAG_TIMEOUT_BETWEEN_RETRIES=10
 
 REM ::Timeout between checking for disconnected state
@@ -132,6 +132,7 @@ set ip_address=
 for /f "tokens=1,2,3 delims=: " %%i in ('netsh interface ipv4 show config name^="!interfacename!" ^| findstr /ir "ip address[:]"') do (if /i "%%i %%j"=="ip address" set ip_address=%%k)
 if "%ip_address%"=="" set ip_address=[Error:unable_to_get_ip_address]
 exit /b
+
 
 
 
